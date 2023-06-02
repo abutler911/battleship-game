@@ -1,0 +1,37 @@
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Vollkorn', serif;
+
+}
+
+h1 {
+    color: #fff;
+    font-size: 4rem;
+    font-weight: 700;
+}
+
+h2 {
+    color: #fff;
+    font-size: 3rem;
+    font-weight: 600;
+}
+
+.bg-image {
+    background-image: url('https://images.unsplash.com/photo-1627943895539-8c2f8bc1cdef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=686&q=80');
+    background-size: cover;
+    background-position: center;
+}
+
+.overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.btn {
+    width: 10%;
+    height: auto;
+    background-color: green;
+    color: #000;
+    font-size: 1.5rem;
+}
