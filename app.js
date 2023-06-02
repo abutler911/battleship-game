@@ -8,6 +8,7 @@ const dotenv = require("dotenv");
 const passport = require("passport");
 const MongoStore = require("connect-mongo");
 const expressLayouts = require("express-ejs-layouts");
+const bodyParser = require("body-parser");
 
 const Game = require("./models/Game");
 const User = require("./models/User");
@@ -72,6 +73,11 @@ passport.deserializeUser(async (id, done) => {
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(expressLayouts);
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// parse application/json
+app.use(bodyParser.json());
 
 // MongoDB connection
 
@@ -81,21 +87,90 @@ mongoose
   .catch((error) => console.error("Error connecting to MongoDB", error));
 
 // Routes
-app.get("/", (req, res) => res.render("index", { layout: "layouts/main" }));
-
-app.post("/register", async (req, res) => {
-  const hashedPassword = await bcrypt.hash(req.body.password, 10);
-  const user = new User({
-    username: req.body.username,
-    password: hashedPassword,
+app.get("/", (req, res) => {
+  res.render("index", {
+    layout: "layouts/main",
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user,
   });
-
-  await user.save();
-  res.redirect("/login");
 });
 
-app.post("/login", passport.authenticate("local"), (req, res) => {
-  res.redirect("/");
+app.get("/register", (req, res) =>
+  res.render("register", { layout: "layouts/main" })
+);
+app.get("/login", (req, res) => {
+  res.render("login", { layout: "layouts/main" });
+});
+app.post("/logout", (req, res) => {
+  req.logout(() => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.log(
+          "Error : Failed to destroy the session during logout.",
+          err
+        );
+      }
+      req.user = null;
+      res.redirect("/");
+    });
+  });
+});
+
+app.post("/register", async (req, res) => {
+  try {
+    const existingUser = await User.findOne({ username: req.body.username });
+
+    if (existingUser) {
+      return res.status(400).send("Username already exists");
+    }
+
+    if (req.body.password.length < 8) {
+      return res.status(400).send("Password must be at least 8 characters");
+    }
+
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const user = new User({
+      username: req.body.username,
+      password: hashedPassword,
+    });
+
+    await user.save();
+    res.redirect("/login");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.post("/login", function (req, res, next) {
+  passport.authenticate("local", function (err, user, info) {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      // If authentication failed, `user` will be set to false.
+      // We could optionally redirect back to login page with a message.
+      return res.redirect("/login");
+    }
+    req.logIn(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+      return res.redirect("/"); // Upon successful login, redirect the user to the home page.
+    });
+  })(req, res, next);
+});
+//middleware
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect("/login");
+}
+
+// Use the middleware in a route.
+app.get("/protected-route", ensureAuthenticated, (req, res) => {
+  res.send("You are viewing the protected route!");
 });
 
 // Socket.IO events
