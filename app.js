@@ -81,10 +81,10 @@ app.use(bodyParser.json());
 
 // MongoDB connection
 
-mongoose
-  .connect(dbConnectionStr, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((error) => console.error("Error connecting to MongoDB", error));
+// mongoose
+//   .connect(dbConnectionStr, { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log("Connected to MongoDB"))
+//   .catch((error) => console.error("Error connecting to MongoDB", error));
 
 // Routes
 app.get("/", (req, res) => {
@@ -179,5 +179,22 @@ io.on("connection", (socket) => {
 });
 
 // Start server
-const PORT = 3000;
-server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+// const PORT = 3000;
+// server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+async function startServer() {
+  try {
+    await mongoose.connect(dbConnectionStr, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to MongoDB");
+
+    // Start server
+    const PORT = 3000;
+    server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+  } catch (error) {
+    console.error("Error connecting to MongoDB", error);
+  }
+}
+
+startServer();
