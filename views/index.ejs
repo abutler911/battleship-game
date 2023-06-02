@@ -3,11 +3,21 @@
     class="row min-vh-100 justify-content-center align-items-center text-center text-light overlay"
   >
     <div class="col-12">
-      <h1>Welcome to Maritime Mayhem!!</h1>
-      <h2>A thrilling online battleship game.</h2>
+      <% if(isAuthenticated) { %>
+      <h2>Hello, <%=user.username%>!</h2>
+      <% } %>
+      <br /><br />
+      <h1>Welcome to Maritime Mayhem</h1>
+      <h3>A thrilling online battleship game.</h3>
       <div class="mt-5">
+        <% if (isAuthenticated) { %>
+        <form action="/logout" method="POST">
+          <button class="btn btn-lg" type="submit">Logout</button>
+        </form>
+        <% } else { %>
         <a class="btn btn-lg" href="/login" role="button">Login</a>
         <a class="btn btn-lg" href="/register" role="button">Register</a>
+        <% } %>
       </div>
     </div>
   </div>
