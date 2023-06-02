@@ -81,10 +81,10 @@ app.use(bodyParser.json());
 
 // MongoDB connection
 
-// mongoose
-//   .connect(dbConnectionStr, { useNewUrlParser: true, useUnifiedTopology: true })
-//   .then(() => console.log("Connected to MongoDB"))
-//   .catch((error) => console.error("Error connecting to MongoDB", error));
+mongoose
+  .connect(dbConnectionStr, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((error) => console.error("Error connecting to MongoDB", error));
 
 // Routes
 app.get("/", (req, res) => {
@@ -148,18 +148,17 @@ app.post("/login", function (req, res, next) {
       return next(err);
     }
     if (!user) {
-      // If authentication failed, `user` will be set to false.
-      // We could optionally redirect back to login page with a message.
       return res.redirect("/login");
     }
     req.logIn(user, function (err) {
       if (err) {
         return next(err);
       }
-      return res.redirect("/"); // Upon successful login, redirect the user to the home page.
+      return res.redirect("/");
     });
   })(req, res, next);
 });
+
 //middleware
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) {
@@ -168,33 +167,11 @@ function ensureAuthenticated(req, res, next) {
   res.redirect("/login");
 }
 
-// Use the middleware in a route.
-app.get("/protected-route", ensureAuthenticated, (req, res) => {
-  res.send("You are viewing the protected route!");
-});
-
 // Socket.IO events
 io.on("connection", (socket) => {
   // handle socket events
 });
 
 // Start server
-// const PORT = 3000;
-// server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
-async function startServer() {
-  try {
-    await mongoose.connect(dbConnectionStr, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("Connected to MongoDB");
-
-    // Start server
-    const PORT = process.env.PORT || 3000;
-    server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
-  } catch (error) {
-    console.error("Error connecting to MongoDB", error);
-  }
-}
-
-startServer();
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
