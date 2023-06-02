@@ -3,7 +3,6 @@ body {
     padding: 0;
     box-sizing: border-box;
     font-family: 'Vollkorn', serif;
-
 }
 
 h1 {
@@ -43,5 +42,25 @@ h2 {
     background-color: green;
     color: #000;
     font-weight: 600;
+}
 
+
+@media screen and (max-width: 600px) {
+    h1 {
+        font-size: 3rem;
+
+    }
+
+    h2 {
+        margin-top: 10px;
+        font-size: 2rem;
+
+    }
+
+    .btn {
+        width: 50%;
+        margin-bottom: 10px;
+        font-size: 1rem;
+
+    }
 }
