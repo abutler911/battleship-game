@@ -98,9 +98,18 @@ app.get("/", (req, res) => {
 app.get("/register", (req, res) =>
   res.render("register", { layout: "layouts/main" })
 );
+
 app.get("/login", (req, res) => {
   res.render("login", { layout: "layouts/main" });
 });
+
+app.get("/game", ensureAuthenticated, (req, res) => {
+  res.render("game", {
+    layout: "layouts/main",
+    user: req.user,
+  });
+});
+
 app.post("/logout", (req, res) => {
   req.logout(() => {
     req.session.destroy((err) => {
@@ -154,7 +163,7 @@ app.post("/login", function (req, res, next) {
       if (err) {
         return next(err);
       }
-      return res.redirect("/");
+      return res.redirect("/game");
     });
   })(req, res, next);
 });
@@ -168,8 +177,39 @@ function ensureAuthenticated(req, res, next) {
 }
 
 // Socket.IO events
+
+var availablePlayers = [];
+
 io.on("connection", (socket) => {
-  // handle socket events
+  console.log(`New user connected with id ${socket.id}`);
+
+  socket.on("join game", (userData) => {
+    console.log(`User ${userData.username} joined the game`);
+
+    availablePlayers.push({ socketId: socket.id, username: userData.username });
+    io.emit("update player list", availablePlayers);
+  });
+
+  socket.on("send invite", (invitedPlayerUsername) => {
+    var invitedPlayer = availablePlayers.find(
+      (player) => player.username === invitedPlayerUsername
+    );
+    if (invitedPlayer) {
+      io.to(invitedPlayer.socketId).emit("receive invite", { from: socket.id });
+    }
+  });
+
+  socket.on("accept invite", (fromSocketId) => {
+    var gameSession = { player1: socket.id, player2: fromSocketId };
+    io.to(fromSocketId).emit("start game", gameSession);
+    io.to(socket.id).emit("start game", gameSession);
+
+    availablePlayers = availablePlayers.filter(
+      (player) =>
+        player.socketId !== socket.id && player.socketId !== fromSocketId
+    );
+    io.emit("update player list", availablePlayers);
+  });
 });
 
 // Start server

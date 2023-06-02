@@ -1,0 +1,57 @@
+<div class="container bg-dark">
+  <h1>Welcome to the Game, <%= user.username %>!</h1>
+  <p>
+    Select a player to invite to a game, or wait for an invite from another
+    player.
+  </p>
+
+  <h2>Available Players:</h2>
+  <ul id="playerList"></ul>
+
+  <h2>Invitations:</h2>
+  <ul id="inviteList"></ul>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+
+  var userData = {
+    username: "<%= user.username %>",
+  };
+
+  socket.emit("join game", userData);
+
+  socket.on("update player list", function (playerList) {
+    var playerListElement = document.getElementById("playerList");
+    playerListElement.innerHTML = "";
+    playerList.forEach(function (player) {
+      if (player.username !== userData.username) {
+        var playerElement = document.createElement("li");
+        playerElement.textContent = player.username;
+        playerElement.addEventListener("click", function () {
+          socket.emit("send invite", player.username);
+        });
+        playerListElement.appendChild(playerElement);
+      }
+    });
+  });
+
+  socket.on("receive invite", function (inviteData) {
+    var inviteListElement = document.getElementById("inviteList");
+    var inviteElement = document.createElement("li");
+    inviteElement.textContent = `Invite from ${inviteData.from}`;
+    var acceptButton = document.createElement("button");
+    acceptButton.textContent = "Accept";
+    acceptButton.addEventListener("click", function () {
+      socket.emit("accept invite", inviteData.from);
+      inviteListElement.removeChild(inviteElement);
+    });
+    inviteElement.appendChild(acceptButton);
+    inviteListElement.appendChild(inviteElement);
+  });
+
+  socket.on("start game", function (gameSessionData) {
+    console.log("Game started with player " + gameSessionData.player2);
+    // Update the page to start the game
+  });
+</script>
