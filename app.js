@@ -186,29 +186,59 @@ io.on("connection", (socket) => {
   socket.on("join game", (userData) => {
     console.log(`User ${userData.username} joined the game`);
 
-    availablePlayers.push({ socketId: socket.id, username: userData.username });
-    io.emit("update player list", availablePlayers);
-  });
-
-  socket.on("send invite", (invitedPlayerUsername) => {
-    var invitedPlayer = availablePlayers.find(
-      (player) => player.username === invitedPlayerUsername
+    const isPlayerAvailable = availablePlayers.some(
+      (player) => player.username === userData.username
     );
-    if (invitedPlayer) {
-      io.to(invitedPlayer.socketId).emit("receive invite", { from: socket.id });
+
+    if (!isPlayerAvailable) {
+      availablePlayers.push({
+        socketId: socket.id,
+        username: userData.username,
+      });
+      io.emit("update player list", availablePlayers);
     }
   });
 
-  socket.on("accept invite", (fromSocketId) => {
-    var gameSession = { player1: socket.id, player2: fromSocketId };
-    io.to(fromSocketId).emit("start game", gameSession);
-    io.to(socket.id).emit("start game", gameSession);
+  socket.on("send invite", (invitedPlayerUsername) => {
+    var invitingPlayer = availablePlayers.find(
+      (player) => player.socketId === socket.id
+    );
+    var invitedPlayer = availablePlayers.find(
+      (player) => player.username === invitedPlayerUsername
+    );
+    if (invitingPlayer && invitedPlayer) {
+      io.to(invitedPlayer.socketId).emit("receive invite", {
+        from: invitingPlayer.username,
+      });
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`User with id ${socket.id} disconnected`);
 
     availablePlayers = availablePlayers.filter(
-      (player) =>
-        player.socketId !== socket.id && player.socketId !== fromSocketId
+      (player) => player.socketId !== socket.id
     );
+
     io.emit("update player list", availablePlayers);
+  });
+
+  socket.on("accept invite", (fromUsername) => {
+    var fromSocket = availablePlayers.find(
+      (player) => player.username === fromUsername
+    );
+    if (fromSocket) {
+      var gameSession = { player1: socket.id, player2: fromSocket.socketId };
+      io.to(fromSocket.socketId).emit("start game", gameSession);
+      io.to(socket.id).emit("start game", gameSession);
+
+      availablePlayers = availablePlayers.filter(
+        (player) =>
+          player.socketId !== socket.id &&
+          player.socketId !== fromSocket.socketId
+      );
+      io.emit("update player list", availablePlayers);
+    }
   });
 });
 
