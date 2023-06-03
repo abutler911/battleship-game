@@ -1,16 +1,31 @@
-<div class="container bg-dark">
-  <h1>Welcome to the Game, <%= user.username %>!</h1>
-  <p>
-    Select a player to invite to a game, or wait for an invite from another
-    player.
-  </p>
+<div class="container-fluid bg-image">
+  <div
+    id="content"
+    class="row min-vh-100 justify-content-center align-items-center text-center text-light overlay"
+  >
+    <h1>Welcome to the Game, <%= user.username %>!</h1>
+    <p>
+      Select a player to invite to a game, or wait for an invite from another
+      player.
+    </p>
 
-  <h2>Available Players:</h2>
-  <ul id="playerList"></ul>
+    <h2>Available Players:</h2>
+    <ul id="playerList"></ul>
 
-  <h2>Invitations:</h2>
-  <ul id="inviteList"></ul>
+    <h2>Invitations:</h2>
+    <ul id="inviteList"></ul>
+  </div>
+
+  <div
+    id="gameSession"
+    class="row min-vh-100 justify-content-center align-items-center text-center text-light overlay"
+    style="display: none"
+  >
+    <h1>Game Session</h1>
+    <table id="gameBoard"></table>
+  </div>
 </div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
   var socket = io();
@@ -52,6 +67,32 @@
 
   socket.on("start game", function (gameSessionData) {
     console.log("Game started with player " + gameSessionData.player2);
+
     // Update the page to start the game
+    document.getElementById("content").style.display = "none";
+    document.getElementById("gameSession").style.display = "flex";
+
+    // Initialize game grid
+    var gameBoardElement = document.getElementById("gameBoard");
+    var letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+
+    for (var y = 0; y <= 10; y++) {
+      var rowElement = document.createElement("tr");
+
+      for (var x = 0; x <= 10; x++) {
+        var cellElement = document.createElement("td");
+        if (x === 0 && y > 0) {
+          cellElement.textContent = letters[y - 1];
+        } else if (y === 0 && x > 0) {
+          cellElement.textContent = x;
+        }
+
+        rowElement.appendChild(cellElement);
+      }
+
+      gameBoardElement.appendChild(rowElement);
+    }
+
+    // Setup game session
   });
 </script>
